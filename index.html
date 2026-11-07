@@ -539,6 +539,7 @@ footer { text-align: center; color: var(--suave); font-size: 13px; padding: 40px
   addEventListener('scroll', leerScroll, { passive: true }); leerScroll();
   const forzado = new URLSearchParams(location.search).get('p'); // para capturas de prueba
   if (forzado !== null) { removeEventListener('scroll', leerScroll); objetivo = p = +forzado; }
+  window.fijarProgreso = v => { removeEventListener('scroll', leerScroll); objetivo = p = v; }; // para grabar el video
 
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), s3 = new THREE.Vector3();
   const reloj = new THREE.Clock();
