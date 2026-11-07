@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Andrés Flores · Apps, juegos e IA</title>
+<meta name="description" content="Desarrollador chileno de apps móviles, videojuegos y soluciones con inteligencia artificial.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fondo: #07060d;
+  --fondo2: #0f0d1c;
+  --tarjeta: #141226;
+  --borde: #2a2650;
+  --texto: #ece9ff;
+  --suave: #a29dc8;
+  --cian: #3ee6ff;
+  --violeta: #9b6bff;
+  --rosa: #ff5fa8;
+  --oro: #ffc94d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: Inter, system-ui, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+h1, h2, h3, .marca { font-family: "Space Grotesk", Inter, sans-serif; letter-spacing: -0.02em; }
+a { color: inherit; }
+
+/* ---------- barra ---------- */
+nav {
+  position: fixed; inset: 0 0 auto 0; z-index: 20;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px clamp(16px, 4vw, 48px);
+  background: linear-gradient(var(--fondo) 0%, transparent 100%);
+}
+.marca { font-weight: 700; font-size: 18px; }
+.marca span { color: var(--cian); }
+nav .ir {
+  font-size: 14px; font-weight: 600; text-decoration: none;
+  padding: 9px 18px; border-radius: 99px;
+  background: linear-gradient(90deg, var(--cian), var(--violeta));
+  color: #0b0a14;
+}
+
+/* ---------- escena con scroll ---------- */
+#escena { position: relative; height: 520vh; }
+#pegado { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+#lienzo { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.capa {
+  position: absolute; left: clamp(16px, 6vw, 96px); right: clamp(16px, 6vw, 96px);
+  bottom: clamp(48px, 12vh, 140px);
+  max-width: 560px; opacity: 0; transform: translateY(24px);
+  transition: none; pointer-events: none;
+}
+.capa.der { left: auto; text-align: right; }
+.etiqueta {
+  display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--cian); margin-bottom: 10px;
+}
+.capa h1 { font-size: clamp(40px, 8vw, 88px); line-height: 0.98; }
+.capa h2 { font-size: clamp(30px, 5.5vw, 60px); line-height: 1.02; }
+.capa p { color: var(--suave); font-size: clamp(15px, 1.6vw, 18px); margin-top: 14px; }
+.grad { background: linear-gradient(90deg, var(--cian), var(--violeta) 60%, var(--rosa)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.capa.der .chips { justify-content: flex-end; }
+.chip { font-size: 13px; padding: 5px 12px; border: 1px solid var(--borde); border-radius: 99px; background: rgba(20, 18, 38, 0.7); backdrop-filter: blur(6px); }
+#baja {
+  position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
+  font-size: 12px; color: var(--suave); letter-spacing: 0.2em; text-transform: uppercase;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+#baja i { width: 2px; height: 34px; background: linear-gradient(var(--cian), transparent); animation: baja 1.6s infinite; }
+@keyframes baja { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 51% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+#progreso { position: absolute; left: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--cian), var(--violeta)); width: 0; z-index: 5; }
+
+/* ---------- secciones ---------- */
+section.bloque { padding: clamp(72px, 12vw, 140px) clamp(16px, 6vw, 96px); max-width: 1240px; margin: 0 auto; }
+.titulo-sec { font-size: clamp(32px, 5vw, 54px); line-height: 1.05; margin-bottom: 14px; }
+.sub { color: var(--suave); max-width: 640px; font-size: 17px; }
+.js .aparece { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(.2,.7,.2,1); }
+.js .aparece.visto { opacity: 1; transform: none; }
+
+/* proyectos */
+.proyectos { display: grid; gap: 22px; margin-top: 48px; grid-template-columns: repeat(12, 1fr); }
+.proy {
+  grid-column: span 6; position: relative; overflow: hidden;
+  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 22px;
+  display: flex; flex-direction: column;
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+.proy:hover { transform: translateY(-6px); border-color: var(--violeta); }
+.proy.grande { grid-column: span 12; flex-direction: row; }
+.proy .foto { position: relative; overflow: hidden; background: var(--fondo2); aspect-ratio: 16/9; }
+.proy.grande .foto { flex: 1.4; aspect-ratio: auto; min-height: 340px; }
+.proy .foto img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.8s ease; }
+.proy:hover .foto img { transform: scale(1.04); }
+.proy .foto.movil { display: flex; justify-content: center; align-items: flex-end; gap: 14px; padding: 26px 20px 0; background: radial-gradient(circle at 50% 120%, #ff8a3d55, transparent 60%), var(--fondo2); }
+.proy .foto.movil img { width: 38%; max-width: 190px; height: auto; border-radius: 18px 18px 0 0; border: 3px solid #26233f; border-bottom: 0; }
+.proy .foto.movil img:nth-child(2) { margin-bottom: 18px; border-radius: 18px; border-bottom: 3px solid #26233f; }
+.proy .info { padding: 26px; flex: 1; display: flex; flex-direction: column; }
+.proy h3 { font-size: 24px; line-height: 1.15; }
+.proy .tipo { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--oro); margin-bottom: 8px; }
+.proy p { color: var(--suave); margin-top: 10px; font-size: 15px; }
+.proy ul { list-style: none; margin-top: 14px; display: grid; gap: 6px; font-size: 14px; }
+.proy li::before { content: "▸ "; color: var(--cian); }
+.proy .chips { margin-top: auto; padding-top: 18px; }
+.icono-proy {
+  aspect-ratio: 16/9; display: grid; place-items: center; font-size: 64px;
+  background: var(--g, radial-gradient(circle at 30% 30%, #3ee6ff33, transparent 60%), var(--fondo2));
+  position: relative; overflow: hidden;
+}
+.icono-proy svg { width: 84px; height: 84px; filter: drop-shadow(0 0 22px currentColor); }
+.icono-proy::after {
+  content: ""; position: absolute; inset: 0;
+  background-image: linear-gradient(var(--borde) 1px, transparent 1px), linear-gradient(90deg, var(--borde) 1px, transparent 1px);
+  background-size: 28px 28px; opacity: 0.35; mask-image: radial-gradient(circle, #000 20%, transparent 75%);
+}
+
+/* servicios */
+.servicios { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 44px; }
+.serv { padding: 26px; border-radius: 20px; background: linear-gradient(160deg, #1a1733, var(--tarjeta)); border: 1px solid var(--borde); }
+.serv .num { font-family: "Space Grotesk"; font-size: 14px; color: var(--violeta); }
+.serv h3 { font-size: 21px; margin: 8px 0 8px; }
+.serv p { color: var(--suave); font-size: 15px; }
+
+/* proceso */
+.pasos { margin-top: 44px; display: grid; gap: 0; counter-reset: paso; }
+.paso { display: grid; grid-template-columns: 64px 1fr; gap: 18px; padding: 22px 0; border-top: 1px solid var(--borde); }
+.paso:last-child { border-bottom: 1px solid var(--borde); }
+.paso b { font-family: "Space Grotesk"; font-size: 34px; color: var(--cian); line-height: 1; }
+.paso h3 { font-size: 20px; }
+.paso p { color: var(--suave); font-size: 15px; }
+
+/* datos */
+.datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 36px; }
+.dato { text-align: center; padding: 22px 10px; border-radius: 18px; border: 1px solid var(--borde); background: var(--tarjeta); }
+.dato b { display: block; font-family: "Space Grotesk"; font-size: 42px; line-height: 1; }
+.dato span { color: var(--suave); font-size: 14px; }
+
+/* contacto */
+#contacto { text-align: center; }
+#contacto .titulo-sec { font-size: clamp(38px, 7vw, 80px); }
+#contacto .sub { margin: 0 auto; }
+.botones { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+.btn { text-decoration: none; font-weight: 600; padding: 14px 26px; border-radius: 99px; border: 1px solid var(--borde); background: var(--tarjeta); }
+.btn.pri { background: linear-gradient(90deg, var(--cian), var(--violeta)); color: #0b0a14; border: 0; }
+footer { text-align: center; color: var(--suave); font-size: 13px; padding: 40px 16px 60px; }
+
+@media (max-width: 820px) {
+  .proy, .proy.grande { grid-column: span 12; flex-direction: column; }
+  .proy.grande .foto { min-height: 0; aspect-ratio: 16/9; }
+  .capa, .capa.der { left: 16px; right: 16px; text-align: left; bottom: 96px; }
+  .capa.der .chips { justify-content: flex-start; }
+  .paso { grid-template-columns: 46px 1fr; }
+}
+.captura .aparece { opacity: 1 !important; transform: none !important; }
+.captura #escena { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .aparece { opacity: 1; transform: none; transition: none; }
+}
+</style>
+</head>
+<body>
+<script>document.body.classList.add('js'); if (location.hash === '#todo') document.body.classList.add('captura');</script>
+
+<nav>
+  <div class="marca">andrés<span>.</span>dev</div>
+  <a class="ir" href="#contacto">Hablemos</a>
+</nav>
+
+<div id="escena">
+  <div id="pegado">
+    <div id="progreso"></div>
+    <canvas id="lienzo"></canvas>
+
+    <div class="capa" data-de="0" data-a="0.16">
+      <span class="etiqueta">Desarrollador · Chile</span>
+      <h1>Andrés<br><span class="grad">Flores</span></h1>
+      <p>Hago apps móviles, videojuegos y herramientas con inteligencia artificial. De la idea a la tienda.</p>
+    </div>
+
+    <div class="capa der" data-de="0.22" data-a="0.42">
+      <span class="etiqueta">01 · Apps móviles</span>
+      <h2>Cada pieza,<br><span class="grad">bien pensada</span></h2>
+      <p>Apps Android y multiplataforma con cámara, mapas, notificaciones y base de datos en la nube.</p>
+      <div class="chips"><span class="chip">Kotlin</span><span class="chip">Flutter</span><span class="chip">Firebase</span><span class="chip">ML Kit</span></div>
+    </div>
+
+    <div class="capa" data-de="0.48" data-a="0.66">
+      <span class="etiqueta">02 · Videojuegos</span>
+      <h2>Mundos que<br><span class="grad">enganchan</span></h2>
+      <p>Juegos 3D para PC y móvil: progresión, economía, jefes, cartas coleccionables.</p>
+      <div class="chips"><span class="chip">Unreal Engine 5</span><span class="chip">Godot 4</span><span class="chip">C++</span><span class="chip">GDScript</span></div>
+    </div>
+
+    <div class="capa der" data-de="0.72" data-a="0.88">
+      <span class="etiqueta">03 · Inteligencia artificial</span>
+      <h2>IA que<br><span class="grad">trabaja por ti</span></h2>
+      <p>Chatbots para negocios, asistentes de voz y equipos de IAs que automatizan tareas.</p>
+      <div class="chips"><span class="chip">Python</span><span class="chip">APIs de IA</span><span class="chip">Bots</span><span class="chip">FastAPI</span></div>
+    </div>
+
+    <div class="capa" data-de="0.93" data-a="1.01">
+      <span class="etiqueta">Todo junto</span>
+      <h2>Tu proyecto,<br><span class="grad">funcionando</span></h2>
+      <p>Mira lo que ya he construido ↓</p>
+    </div>
+
+    <div id="baja"><span>Desliza</span><i></i></div>
+  </div>
+</div>
+
+<section class="bloque" id="proyectos">
+  <h2 class="titulo-sec aparece">Proyectos</h2>
+  <p class="sub aparece">Cosas reales, terminadas y funcionando. Cada una me enseñó algo que hoy aplico en proyectos de clientes.</p>
+
+  <div class="proyectos">
+    <article class="proy grande aparece">
+      <div class="foto"><img src="img/03_mina_vigas.jpg" alt="Captura del juego Bajo Tierra: túnel de mina con vigas iluminado por faroles" loading="lazy"></div>
+      <div class="info">
+        <div class="tipo">Videojuego PC · Unreal Engine 5</div>
+        <h3>Bajo Tierra</h3>
+        <p>Aventura de minería y supervivencia en primera persona. Explora minas, rescata a tu equipo y enfrenta criaturas bajo tierra.</p>
+        <ul>
+          <li>Mapa, brújula, estamina y niveles de dificultad</li>
+          <li>Enemigos con IA: reptadores, murciélagos, jefe final</li>
+          <li>Herramientas mejorables (taladro, faroles) y encargos</li>
+        </ul>
+        <div class="chips"><span class="chip">Unreal 5</span><span class="chip">C++</span><span class="chip">Blueprints</span></div>
+      </div>
+    </article>
+
+    <article class="proy aparece">
+      <div class="foto movil"><img src="img/minero1.png" alt="Bajo Tierra Minero: el minero y sus ayudantes picando en la mina" loading="lazy"><img src="img/minero2.png" alt="Bajo Tierra Minero: carta Pico dorado de la colección" loading="lazy"></div>
+      <div class="info">
+        <div class="tipo">Juego móvil · Godot 4</div>
+        <h3>Bajo Tierra: Minero</h3>
+        <p>Idle-arcade para Android: picas, contratas ayudantes, abres cofres y coleccionas cartas que mejoran tu equipo.</p>
+        <div class="chips"><span class="chip">Godot</span><span class="chip">Android</span><span class="chip">Monetización</span></div>
+      </div>
+    </article>
+
+    <article class="proy aparece">
+      <div class="foto" style="background:#1667c9"><img style="object-fit:contain" src="img/reporte.png" alt="Reporte Vecinal: tu barrio, reportado en un minuto" loading="lazy"></div>
+      <div class="info">
+        <div class="tipo">App Android · Kotlin + Firebase</div>
+        <h3>Reporte Vecinal</h3>
+        <p>Los vecinos reportan problemas del barrio (luminarias, basura, baches) con foto y ubicación. Incluye Modo Emergencia.</p>
+        <div class="chips"><span class="chip">Kotlin</span><span class="chip">Firebase</span><span class="chip">Mapas</span></div>
+      </div>
+    </article>
+
+    <article class="proy aparece">
+      <div class="icono-proy" style="color: var(--cian)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
+      </div>
+      <div class="info">
+        <div class="tipo">App multiplataforma · Flutter</div>
+        <h3>Escáner de Compras</h3>
+        <p>Escaneas los productos en el súper y la app arma la lista, calcula el total y avisa si te pasas del presupuesto.</p>
+        <div class="chips"><span class="chip">Flutter</span><span class="chip">Cámara</span><span class="chip">Offline</span></div>
+      </div>
+    </article>
+
+    <article class="proy aparece">
+      <div class="icono-proy" style="color: var(--oro); --g: radial-gradient(circle at 70% 30%, #ffc94d33, transparent 60%), var(--fondo2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14l-1.5-6.5A2 2 0 0 0 15.6 9H8.4a2 2 0 0 0-1.9 1.5Z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M3 13h2M19 13h2M8 5l1.5 2M16 5l-1.5 2M12 3v3"/></svg>
+      </div>
+      <div class="info">
+        <div class="tipo">App Android · Bluetooth OBD2</div>
+        <h3>Lector de Fallas</h3>
+        <p>Se conecta al auto con un lector ELM327, lee los códigos de falla y los explica en lenguaje simple.</p>
+        <div class="chips"><span class="chip">Android</span><span class="chip">Bluetooth</span><span class="chip">OBD2</span></div>
+      </div>
+    </article>
+
+    <article class="proy aparece">
+      <div class="icono-proy" style="color: var(--violeta); --g: radial-gradient(circle at 50% 50%, #9b6bff40, transparent 60%), var(--fondo2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg>
+      </div>
+      <div class="info">
+        <div class="tipo">Asistente de voz · Python + IA</div>
+        <h3>JARVIS</h3>
+        <p>Asistente por voz para el PC: responde preguntas, controla Spotify, lee el correo y el calendario, y recuerda cosas.</p>
+        <div class="chips"><span class="chip">Python</span><span class="chip">IA</span><span class="chip">Voz</span></div>
+      </div>
+    </article>
+
+    <article class="proy aparece">
+      <div class="icono-proy" style="color: var(--rosa); --g: radial-gradient(circle at 30% 70%, #ff5fa833, transparent 60%), var(--fondo2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg>
+      </div>
+      <div class="info">
+        <div class="tipo">Chatbot para negocios · IA</div>
+        <h3>Chatbot Pyme</h3>
+        <p>Atiende clientes 24/7, responde preguntas frecuentes y agenda horas solo. Se adapta a cualquier negocio con un archivo de configuración.</p>
+        <div class="chips"><span class="chip">FastAPI</span><span class="chip">IA</span><span class="chip">Agenda</span></div>
+      </div>
+    </article>
+
+    <article class="proy grande aparece">
+      <div class="icono-proy" style="color: var(--oro); flex: 0.8; aspect-ratio: auto; min-height: 220px; --g: radial-gradient(circle at 50% 50%, #ffc94d2a, transparent 60%), var(--fondo2)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M6 7h12M6 7l-3 7a3 3 0 0 0 6 0ZM18 7l-3 7a3 3 0 0 0 6 0Z"/></svg>
+      </div>
+      <div class="info">
+        <div class="tipo">Experiencia</div>
+        <h3>Poder Judicial de Chile</h3>
+        <p>Práctica en desarrollo de software en un Juzgado de Garantía: participé en una aplicación web y su base de datos.</p>
+        <div class="chips"><span class="chip">PHP</span><span class="chip">SQL Server</span><span class="chip">Python</span><span class="chip">Java</span></div>
+      </div>
+    </article>
+  </div>
+
+  <div class="datos">
+    <div class="dato aparece"><b class="grad" data-cuenta="8">0</b><span>proyectos propios</span></div>
+    <div class="dato aparece"><b class="grad" data-cuenta="3">0</b><span>motores y frameworks</span></div>
+    <div class="dato aparece"><b class="grad" data-cuenta="24">0</b><span>horas para responder</span></div>
+  </div>
+</section>
+
+<section class="bloque" id="servicios">
+  <h2 class="titulo-sec aparece">¿En qué te ayudo?</h2>
+  <p class="sub aparece">Proyectos pequeños y medianos, entregados por etapas para que veas avances cada semana.</p>
+  <div class="servicios">
+    <div class="serv aparece"><div class="num">01</div><h3>Apps móviles</h3><p>Android o Android + iPhone con Flutter. Escaneo, mapas, pagos, notificaciones, login.</p></div>
+    <div class="serv aparece"><div class="num">02</div><h3>Videojuegos</h3><p>Prototipos y juegos completos en Godot o Unreal, para móvil o PC.</p></div>
+    <div class="serv aparece"><div class="num">03</div><h3>Chatbots e IA</h3><p>Bots para WhatsApp, Telegram o tu web que atienden clientes y automatizan tareas.</p></div>
+    <div class="serv aparece"><div class="num">04</div><h3>Webs y sistemas</h3><p>Páginas, paneles de administración y bases de datos para tu negocio.</p></div>
+  </div>
+</section>
+
+<section class="bloque" id="proceso">
+  <h2 class="titulo-sec aparece">Cómo trabajo</h2>
+  <div class="pasos">
+    <div class="paso aparece"><b>1</b><div><h3>Entiendo tu idea</h3><p>Conversamos qué necesitas y te propongo la solución más simple que funcione.</p></div></div>
+    <div class="paso aparece"><b>2</b><div><h3>Demo rápida</h3><p>En los primeros días te muestro algo funcionando para validar el rumbo.</p></div></div>
+    <div class="paso aparece"><b>3</b><div><h3>Entregas semanales</h3><p>Avances que puedes probar en tu teléfono o navegador cada semana.</p></div></div>
+    <div class="paso aparece"><b>4</b><div><h3>Entrega y soporte</h3><p>Código fuente, instrucciones y ayuda para publicarlo.</p></div></div>
+  </div>
+</section>
+
+<section class="bloque" id="contacto">
+  <h2 class="titulo-sec aparece">¿Tienes un <span class="grad">proyecto</span>?</h2>
+  <p class="sub aparece">Cuéntame tu idea y te respondo con una propuesta concreta.</p>
+  <div class="botones aparece">
+    <a class="btn pri" href="mailto:andresfloresq45@gmail.com">Escríbeme</a>
+    <a class="btn" href="https://github.com/AndressFlorees25" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</section>
+
+<footer>© 2026 Andrés Flores · Hecho a mano con código, 3D y un equipo de IAs</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const lienzo = document.getElementById('lienzo');
+  const escena = document.getElementById('escena');
+  const capas = [...document.querySelectorAll('.capa')];
+  const barra = document.getElementById('progreso');
+  const baja = document.getElementById('baja');
+  const movil = matchMedia('(max-width: 820px)').matches;
+
+  // ---------- utilidades ----------
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const suave = t => t * t * (3 - 2 * t);
+  const tramo = (p, a, b) => suave(clamp((p - a) / (b - a)));
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  // ---------- three.js ----------
+  if (!window.THREE) return;
+  const render = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, alpha: false });
+  render.setPixelRatio(Math.min(devicePixelRatio, 2));
+  render.setClearColor(0x07060d);
+  const mundo = new THREE.Scene();
+  mundo.fog = new THREE.Fog(0x07060d, 9, 22);
+  const cam = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+
+  mundo.add(new THREE.AmbientLight(0x6a5aa8, 0.6));
+  const luz1 = new THREE.DirectionalLight(0xffffff, 1.0); luz1.position.set(3, 5, 6); mundo.add(luz1);
+  const luzC = new THREE.PointLight(0x3ee6ff, 2.2, 14); luzC.position.set(-4, 1, 3); mundo.add(luzC);
+  const luzV = new THREE.PointLight(0x9b6bff, 2.2, 14); luzV.position.set(4, -1, 2); mundo.add(luzV);
+
+  // Caja redondeada (para el celular)
+  function cajaRedonda(w, h, d, r) {
+    const s = new THREE.Shape();
+    const x = -w / 2, y = -h / 2;
+    s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+    s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+    s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+    const g = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 3, curveSegments: 10 });
+    g.translate(0, 0, -d / 2);
+    return g;
+  }
+
+  // Pantalla dibujada en un canvas (cambia de texto según la etapa)
+  const pc = document.createElement('canvas'); pc.width = 512; pc.height = 1024;
+  const px = pc.getContext('2d');
+  const texPantalla = new THREE.CanvasTexture(pc);
+  let textoPantalla = '';
+  function dibujarPantalla(modo, t) {
+    const clave = modo + Math.floor(t * 30);
+    if (clave === textoPantalla) return;
+    textoPantalla = clave;
+    const g = px.createLinearGradient(0, 0, 0, 1024);
+    g.addColorStop(0, '#1a1145'); g.addColorStop(1, '#06182a');
+    px.fillStyle = g; px.fillRect(0, 0, 512, 1024);
+    px.fillStyle = 'rgba(62,230,255,0.08)';
+    for (let i = 0; i < 1024; i += 6) px.fillRect(0, i, 512, 1);
+    px.textAlign = 'center';
+    if (modo === 'inicio') {
+      px.fillStyle = '#3ee6ff'; px.font = 'bold 150px "Space Grotesk", sans-serif';
+      px.fillText('</>', 256, 470);
+      px.fillStyle = '#ece9ff'; px.font = '600 46px Inter, sans-serif';
+      px.fillText('andrés.dev', 256, 580);
+      // barra de carga
+      px.fillStyle = '#2a2650'; px.fillRect(126, 660, 260, 10);
+      px.fillStyle = '#9b6bff'; px.fillRect(126, 660, 260 * ((t * 0.6) % 1), 10);
+    } else {
+      px.fillStyle = '#ece9ff'; px.font = 'bold 74px "Space Grotesk", sans-serif';
+      px.fillText('¿Hablamos?', 256, 470);
+      px.fillStyle = '#3ee6ff'; px.font = '600 40px Inter, sans-serif';
+      px.fillText('Tu proyecto aquí', 256, 550);
+      px.beginPath(); px.arc(256, 700, 70 + Math.sin(t * 4) * 6, 0, Math.PI * 2);
+      const gb = px.createLinearGradient(186, 0, 326, 0); gb.addColorStop(0, '#3ee6ff'); gb.addColorStop(1, '#9b6bff');
+      px.fillStyle = gb; px.fill();
+      px.fillStyle = '#0b0a14'; px.font = 'bold 70px Inter'; px.fillText('→', 256, 724);
+    }
+    texPantalla.needsUpdate = true;
+  }
+
+  // Piezas del celular: cada una sabe dónde está armada y dónde va al desarmarse
+  const celular = new THREE.Group();
+  mundo.add(celular);
+  const piezas = [];
+  function pieza(malla, armada, desarmada, giro) {
+    malla.userData = { armada, desarmada, giro };
+    celular.add(malla); piezas.push(malla);
+    return malla;
+  }
+  const W = 1.5, H = 3.0;
+  const mat = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, metalness: 0.5, roughness: 0.35 }, o));
+  // carcasa trasera
+  pieza(new THREE.Mesh(cajaRedonda(W, H, 0.08, 0.2), mat(0x1c1838, { metalness: 0.8, roughness: 0.25 })),
+    [0, 0, -0.12], [0.2, -0.1, -2.6], [0.4, -0.6, 0.1]);
+  // batería
+  pieza(new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.5, 0.08), mat(0x2b2f45, { metalness: 0.3 })),
+    [0, -0.45, -0.04], [-1.6, -0.9, -1.4], [0.2, 0.9, -0.3]);
+  // placa con chips
+  const placa = new THREE.Group();
+  placa.add(new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.0, 0.04), mat(0x0f4d3c, { metalness: 0.2, roughness: 0.6 })));
+  [[-0.3, 0.15, 0.32, 0x111111], [0.25, 0.2, 0.24, 0x1a1a1a], [0.2, -0.22, 0.16, 0xd4a017], [-0.32, -0.25, 0.18, 0x222222]].forEach(([x, y, s, c]) => {
+    const chip = new THREE.Mesh(new THREE.BoxGeometry(s, s, 0.05), mat(c, { metalness: 0.9 }));
+    chip.position.set(x, y, 0.04); placa.add(chip);
+  });
+  const nucleo = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.06), new THREE.MeshBasicMaterial({ color: 0x3ee6ff }));
+  nucleo.position.set(-0.3, 0.15, 0.045); placa.add(nucleo);
+  pieza(placa, [0, 0.7, -0.07], [1.7, 1.0, -0.8], [-0.5, -0.8, 0.2]);
+  // cámara
+  const camara = new THREE.Group();
+  camara.add(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.1, 24), mat(0x0a0a12, { metalness: 0.9 })));
+  const lente = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.11, 24), new THREE.MeshStandardMaterial({ color: 0x3a2b8f, metalness: 1, roughness: 0.05, emissive: 0x2a1b6f, emissiveIntensity: 0.6 }));
+  camara.add(lente); camara.rotation.x = Math.PI / 2;
+  pieza(camara, [-0.45, 1.15, -0.2], [-1.4, 1.6, -2.0], [1.2, 0.3, 0.5]);
+  // pantalla (con la textura)
+  const pantalla = pieza(new THREE.Mesh(new THREE.PlaneGeometry(W - 0.12, H - 0.12),
+    new THREE.MeshBasicMaterial({ map: texPantalla, toneMapped: false })), [0, 0, 0.035], [0.5, -0.2, 1.1], [-0.2, 0.5, -0.1]);
+  // marco frontal
+  const marcoG = new THREE.EdgesGeometry(cajaRedonda(W, H, 0.06, 0.2), 30);
+  pieza(new THREE.LineSegments(marcoG, new THREE.LineBasicMaterial({ color: 0x3ee6ff, transparent: true, opacity: 0.55 })),
+    [0, 0, 0], [0, 0, 0.6], [0, 0, 0.6]);
+  // vidrio
+  pieza(new THREE.Mesh(cajaRedonda(W, H, 0.02, 0.2), new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.12 })),
+    [0, 0, 0.06], [-0.3, 0.4, 2.6], [0.3, -0.4, 0.2]);
+
+  // ---------- partículas: minerales que forman una veta y luego una red ----------
+  const N = movil ? 160 : 260;
+  const gemaG = new THREE.OctahedronGeometry(0.07, 0);
+  const gemaM = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.3, roughness: 0.2, emissive: 0x222244, flatShading: true, vertexColors: false });
+  const gemas = new THREE.InstancedMesh(gemaG, gemaM, N);
+  gemas.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  mundo.add(gemas);
+  const colores = [0x3ee6ff, 0x9b6bff, 0xff5fa8, 0xffc94d, 0x56ff9e];
+  const col = new THREE.Color();
+  const P = []; // posiciones de cada etapa
+  for (let i = 0; i < N; i++) {
+    col.setHex(colores[i % colores.length]); gemas.setColorAt(i, col);
+    // A) nube dentro del celular
+    const a = new THREE.Vector3((Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 2.6, (Math.random() - 0.5) * 0.1);
+    // B) veta / anillo de minerales girando (juegos)
+    const ang = (i / N) * Math.PI * 2 * 3;
+    const rad = 2.2 + Math.sin(i * 1.7) * 0.5;
+    const b = new THREE.Vector3(Math.cos(ang) * rad, (i / N - 0.5) * 3.2, Math.sin(ang) * rad);
+    // C) esfera de red neuronal (IA)
+    const phi = Math.acos(1 - 2 * (i + 0.5) / N), th = Math.PI * (1 + Math.sqrt(5)) * i;
+    const c = new THREE.Vector3(Math.cos(th) * Math.sin(phi), Math.cos(phi), Math.sin(th) * Math.sin(phi)).multiplyScalar(movil ? 1.9 : 1.75);
+    P.push({ a, b, c, giro: Math.random() * 6, esc: 0.6 + Math.random() * 0.9 });
+  }
+  gemas.instanceColor.needsUpdate = true;
+
+  // líneas de la red neuronal (une cada punto con sus vecinos cercanos)
+  const pares = [];
+  for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) if (P[i].c.distanceTo(P[j].c) < (movil ? 0.75 : 0.6)) pares.push(i, j);
+  const lineaPos = new Float32Array(pares.length * 3);
+  const lineaG = new THREE.BufferGeometry(); lineaG.setAttribute('position', new THREE.BufferAttribute(lineaPos, 3));
+  const lineaM = new THREE.LineBasicMaterial({ color: 0x7d6bff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+  const red = new THREE.LineSegments(lineaG, lineaM);
+  mundo.add(red);
+
+  // estrellas de fondo
+  const estG = new THREE.BufferGeometry();
+  const estP = new Float32Array(900);
+  for (let i = 0; i < 900; i++) estP[i] = (Math.random() - 0.5) * (i % 3 === 2 ? 20 : 30) - (i % 3 === 2 ? 6 : 0);
+  estG.setAttribute('position', new THREE.BufferAttribute(estP, 3));
+  const estrellas = new THREE.Points(estG, new THREE.PointsMaterial({ color: 0x8f87d6, size: 0.035, transparent: true, opacity: 0.7 }));
+  mundo.add(estrellas);
+
+  // ---------- tamaño ----------
+  function ajustar() {
+    const w = innerWidth, h = innerHeight;
+    render.setSize(w, h, false);
+    cam.aspect = w / h;
+    cam.updateProjectionMatrix();
+  }
+  addEventListener('resize', ajustar); ajustar();
+
+  // ---------- scroll ----------
+  let objetivo = 0, p = 0;
+  function leerScroll() {
+    const r = escena.getBoundingClientRect();
+    objetivo = clamp(-r.top / (r.height - innerHeight));
+  }
+  addEventListener('scroll', leerScroll, { passive: true }); leerScroll();
+  const forzado = new URLSearchParams(location.search).get('p'); // para capturas de prueba
+  if (forzado !== null) { removeEventListener('scroll', leerScroll); objetivo = p = +forzado; }
+
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), s3 = new THREE.Vector3();
+  const reloj = new THREE.Clock();
+
+  function cuadro() {
+    const t = reloj.getElapsedTime();
+    p += (objetivo - p) * 0.085; // inercia suave
+
+    // Etapas
+    const desarme = tramo(p, 0.16, 0.38) * (1 - tramo(p, 0.86, 0.94));   // celular abierto
+    const veta = tramo(p, 0.40, 0.52) * (1 - tramo(p, 0.66, 0.74));      // minerales
+    const ia = tramo(p, 0.68, 0.78) * (1 - tramo(p, 0.88, 0.96));        // red neuronal
+    const fuera = Math.max(veta, ia);                                     // piezas se alejan
+    const final = tramo(p, 0.90, 0.97);
+
+    // Celular: piezas entre armada y desarmada, y lejos cuando hay minerales/IA
+    piezas.forEach(m => {
+      const d = m.userData;
+      const k = desarme;
+      m.position.set(lerp(d.armada[0], d.desarmada[0] * (1 + fuera * 1.6), k),
+                     lerp(d.armada[1], d.desarmada[1] * (1 + fuera * 1.6), k),
+                     lerp(d.armada[2], d.desarmada[2] * (1 + fuera * 0.6), k));
+      m.rotation.set(d.giro[0] * k + (m === camara ? Math.PI / 2 : 0), d.giro[1] * k, d.giro[2] * k);
+    });
+    const giroBase = movil ? 0 : 0.0;
+    celular.rotation.y = lerp(lerp(-0.35 + Math.sin(t * 0.6) * 0.08, 0.6, desarme) + p * Math.PI * 2, Math.PI * 2 - 0.35 + Math.sin(t * 0.6) * 0.08, final) + giroBase;
+    celular.rotation.x = lerp(0.12, -0.25, desarme) + Math.sin(t * 0.8) * 0.03;
+    celular.position.y = Math.sin(t * 1.1) * 0.06;
+    const encogido = 1 - fuera * 0.55;
+    celular.scale.setScalar(encogido);
+    // En pantalla grande el celular va al lado contrario del texto
+    const lado = movil ? 0 : (p < 0.16 ? 1.6 : p < 0.45 ? -1.4 : p < 0.7 ? 1.4 : p < 0.9 ? -1.4 : 1.5);
+    celular.position.x += (lado - celular.position.x) * 0.06;
+    if (movil) celular.position.y += 0.7;
+
+    dibujarPantalla(final > 0.4 ? 'final' : 'inicio', t);
+
+    // Gemas
+    const visibles = clamp(veta + ia + desarme * 0.35);
+    for (let i = 0; i < N; i++) {
+      const g = P[i];
+      // de nube (A) a veta (B) a red (C)
+      v.copy(g.a).applyEuler(celular.rotation).add(celular.position);
+      v.lerp(g.b, veta);
+      if (ia > 0) {
+        s3.copy(g.c).applyAxisAngle(new THREE.Vector3(0, 1, 0), t * 0.25);
+        v.lerp(s3, ia);
+      }
+      if (veta > 0) v.applyAxisAngle(new THREE.Vector3(0, 1, 0), t * 0.35 * veta);
+      v.x += (movil ? 0 : lado * 0.75) * fuera;
+      if (movil) v.y += 0.9 * fuera;
+      e.set(t * 0.8 + g.giro, t * 1.1 + g.giro, 0);
+      q.setFromEuler(e);
+      const tam = visibles * g.esc * (1 + ia * 0.3);
+      s3.set(tam, tam, tam);
+      m4.compose(v, q, s3);
+      gemas.setMatrixAt(i, m4);
+      if (ia > 0.01) { P[i].actual = (P[i].actual || new THREE.Vector3()).copy(v); }
+    }
+    gemas.instanceMatrix.needsUpdate = true;
+
+    // Red neuronal: líneas entre las gemas con pulso
+    lineaM.opacity = ia * (0.35 + Math.sin(t * 3) * 0.1);
+    if (ia > 0.01) {
+      for (let k = 0; k < pares.length; k++) {
+        const pt = P[pares[k]].actual;
+        lineaPos[k * 3] = pt.x; lineaPos[k * 3 + 1] = pt.y; lineaPos[k * 3 + 2] = pt.z;
+      }
+      lineaG.attributes.position.needsUpdate = true;
+    }
+
+    // Cámara: se acerca al principio, se aleja con las etapas
+    const dist = lerp(movil ? 9.2 : 7.2, movil ? 11.5 : 9.0, fuera) - final * 0.8;
+    cam.position.set(Math.sin(p * 1.4) * 1.2, 0.4 + Math.cos(p * 3) * 0.3, dist);
+    cam.lookAt(0, movil ? 0.3 : 0, 0);
+    luzC.intensity = 1.6 + veta * 2; luzV.intensity = 1.6 + ia * 2.5;
+    estrellas.rotation.y = t * 0.01 + p * 0.6;
+
+    render.render(mundo, cam);
+
+    // Textos y barra
+    capas.forEach(c => {
+      const de = +c.dataset.de, a = +c.dataset.a;
+      const entra = tramo(p, de, de + 0.04), sale = 1 - tramo(p, a - 0.04, a);
+      const o = de === 0 ? sale : entra * sale;
+      c.style.opacity = o;
+      c.style.transform = `translateY(${(1 - o) * 24}px)`;
+    });
+    barra.style.width = (p * 100) + '%';
+    baja.style.opacity = 1 - tramo(p, 0.02, 0.08);
+
+    requestAnimationFrame(cuadro);
+  }
+  requestAnimationFrame(cuadro);
+})();
+
+// Aparecer al hacer scroll + contadores
+(() => {
+  const io = new IntersectionObserver(es => es.forEach(x => {
+    if (!x.isIntersecting) return;
+    x.target.classList.add('visto');
+    io.unobserve(x.target);
+    const b = x.target.querySelector('[data-cuenta]');
+    if (b) {
+      const fin = +b.dataset.cuenta, t0 = performance.now();
+      const paso = ahora => { const k = Math.min(1, (ahora - t0) / 1200); b.textContent = Math.round(fin * (1 - Math.pow(1 - k, 3))) + (k === 1 && fin === 24 ? 'h' : ''); if (k < 1) requestAnimationFrame(paso); };
+      requestAnimationFrame(paso);
+    }
+  }), { threshold: 0.15 });
+  document.querySelectorAll('.aparece').forEach((el, i) => { el.style.transitionDelay = (i % 3) * 0.08 + 's'; io.observe(el); });
+})();
+</script>
+</body>
+</html>
